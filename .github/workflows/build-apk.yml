@@ -8,24 +8,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: temurin
 
-      - name: Install dependencies
+      - name: Install npm packages
         run: npm install
+
+      - name: Create www folder if missing
+        run: |
+          mkdir -p www
+          if [ ! -f www/index.html ]; then
+            echo "<html><body><h1>LifeGuard</h1></body></html>" > www/index.html
+          fi
 
       - name: Add Android platform
         run: npx cap add android
@@ -36,13 +39,11 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x android/gradlew
 
-      - name: Build debug APK
-        run: |
-          cd android
-          ./gradlew assembleDebug
+      - name: Build APK
+        run: cd android && ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LifeGuard-debug
+          name: LifeGuard-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
